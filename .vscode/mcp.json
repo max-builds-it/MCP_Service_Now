@@ -1,0 +1,12 @@
+{
+  "servers": {
+    "servicenow": {
+      "command": "python",
+      "args": ["service_now_mcp_server.py"],
+      "env": {
+        "SERVICENOW_INSTANCE_URL": "https://demobuildwf32405.service-now.com",
+        "SERVICENOW_API_KEY": "now_B013YjchMcHNbNlvdiWOAV4PQ1L5Ez9L4xZ83oY2nXC4ei-_GoK2Ci_Yti938htE7WlzG7dabN2x5PhnviXUFQ"
+      }
+    }
+  }
+}
