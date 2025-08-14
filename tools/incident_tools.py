@@ -621,3 +621,82 @@ def get_incident_by_number(
             "success": False,
             "message": f"Failed to fetch incident: {str(e)}",
         }
+
+from datetime import datetime
+import requests
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_incidents_by_date(config, auth_manager, start_date: datetime, end_date: datetime, limit: int = 100) -> dict:
+    """
+    Get incidents created within a date range from ServiceNow.
+
+    Args:
+        config: Server configuration.
+        auth_manager: Authentication manager.
+        start_date: Start date (datetime object).
+        end_date: End date (datetime object).
+        limit: Maximum number of incidents to return.
+
+    Returns:
+        Dictionary with incidents list.
+    """
+    api_url = f"{config.api_url}/table/incident"
+
+    # Format dates for ServiceNow (UTC, 'YYYY-MM-DD HH:MM:SS')
+    start_str = start_date.strftime("%Y-%m-%d %H:%M:%S")
+    end_str = end_date.strftime("%Y-%m-%d %H:%M:%S")
+
+    # Build query
+    query = f"sys_created_on>={start_str}^sys_created_on<={end_str}"
+
+    query_params = {
+        "sysparm_limit": limit,
+        "sysparm_display_value": "true",
+        "sysparm_exclude_reference_link": "true",
+        "sysparm_query": query
+    }
+
+    try:
+        response = requests.get(
+            api_url,
+            params=query_params,
+            headers=auth_manager.get_headers(),
+            timeout=config.timeout
+        )
+        response.raise_for_status()
+
+        data = response.json()
+        incidents = [
+            {
+                "sys_id": inc.get("sys_id"),
+                "number": inc.get("number"),
+                "short_description": inc.get("short_description"),
+                "description": inc.get("description"),
+                "state": inc.get("state"),
+                "priority": inc.get("priority"),
+                "assigned_to": inc.get("assigned_to", {}).get("display_value")
+                    if isinstance(inc.get("assigned_to"), dict)
+                    else inc.get("assigned_to"),
+                "category": inc.get("category"),
+                "subcategory": inc.get("subcategory"),
+                "created_on": inc.get("sys_created_on"),
+                "updated_on": inc.get("sys_updated_on"),
+            }
+            for inc in data.get("result", [])
+        ]
+
+        return {
+            "success": True,
+            "message": f"Found {len(incidents)} incidents between {start_str} and {end_str}",
+            "incidents": incidents
+        }
+
+    except requests.RequestException as e:
+        logger.error(f"Failed to get incidents by date: {e}")
+        return {
+            "success": False,
+            "message": f"Failed to get incidents: {str(e)}",
+            "incidents": []
+        }

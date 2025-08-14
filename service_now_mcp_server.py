@@ -1,5 +1,4 @@
 from fastmcp import FastMCP
-import requests
 import os
 from dotenv import load_dotenv
 from utils.config import ServerConfig, AuthType, AuthConfig, ApiKeyConfig
@@ -151,6 +150,21 @@ def mcp_get_incident_by_number(incident_number: str):
     params = GetIncidentByNumberParams(incident_number=incident_number)
     return get_incident_by_number(server_config, auth_manager, params)
 
+@app.tool()
+def mcp_get_incident_by_date(
+    start_date: str,
+    end_date: str,
+    limit: int = 10,
+    offset: int = 0
+):
+    """Retrieve ServiceNow incidents created between two dates (inclusive). Dates must be in 'YYYY-MM-DD HH:MM:SS' format (UTC)."""
+    params = ListIncidentsParams(
+        start_date=start_date,
+        end_date=end_date,
+        limit=limit,
+        offset=offset
+    )
+    return list_incidents(server_config, auth_manager, params)
 # ----------------------
 # Run MCP server
 # ----------------------
