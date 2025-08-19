@@ -168,5 +168,4 @@ def mcp_get_incident_by_date(
 # ----------------------
 # Run MCP server
 # ----------------------
-if __name__ == "__main__":
-    app.run()
+app.run()
